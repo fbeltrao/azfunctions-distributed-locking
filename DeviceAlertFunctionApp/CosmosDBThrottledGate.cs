@@ -67,7 +67,7 @@ namespace DeviceAlertFunctionApp
                     });
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 throw;
             }
@@ -75,13 +75,13 @@ namespace DeviceAlertFunctionApp
 
 
         /// <summary>
-        /// Tries to adquire a lease
+        /// Tries to acquire a lease
         /// </summary>
         /// <param name="id"></param>
         /// <param name="throttleTime"></param>
         /// <param name="leaseId"></param>
         /// <returns></returns>
-        protected internal override async Task<bool> TryAdquireLeaseAsync(string id, TimeSpan throttleTime, string leaseId)
+        protected internal override async Task<bool> TryAcquireLeaseAsync(string id, TimeSpan throttleTime, string leaseId)
         {
             // Document is already there, check if it has an expired lease
             var readResponse = await this.container.Items.ReadItemAsync<CosmosDBLease>(id, id);

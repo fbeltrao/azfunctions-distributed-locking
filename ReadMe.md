@@ -6,13 +6,13 @@ This sample Azure Function app demonstrates a way to use Azure Storage or Cosmos
 
 ## Sample scenario
 
-IoT devices send telemetry data to Azure IoT Hub containing measured temperature. Based on measured temperature thresholds a notification should be sent. Notifications per device cannot be triggered more than once every 1 minute.
+IoT devices send telemetry data to Azure IoT Hub containing measured temperature. Based on measured temperature thresholds a notification should be sent. Notifications per device cannot be triggered more than once every 60 seconds.
 
 ## Solution demonstrated here
 
-As to most software engineering problems there are multiple solutions to a problem. The one I would like to demonstrate is using Azure Functions to process telemetry data coming from IoT Hub, sending a notification if a device temperature gets too high. By using Azure functions we don't have to worry about scalability, we just have to fine tune the IoT Hub size and the partition count. The application code, if configured properly (i.e. consumption plan), will be scaled by Azure.
+As to most software engineering problems there are multiple solutions to a problem. The one implemented in this repository uses Azure Functions to process telemetry data coming from IoT Hub, sending a notification if a device temperature gets too high.
 
-The challenge we have is to ensure that a single device will not trigger the alert more than once every 10 minutes. The approach demonstrated in this sample is using distributed locking backed by Azure Storage or Cosmos DB.
+The challenge is to ensure that a single device will not trigger the alert more than once every 60 seconds. The approach demonstrated here uses distributed locking backed by Azure Storage or Cosmos DB.
 
 ## Locking using Azure Storage
 
@@ -22,13 +22,13 @@ The implementation is the following:
 
 ```c#
 /// <summary>
-/// Tries to adquire a lease
+/// Tries to acquire a lease
 /// </summary>
 /// <param name="id"></param>
 /// <param name="throttleTime"></param>
 /// <param name="leaseId"></param>
 /// <returns></returns>
-protected internal override async Task<bool> TryAdquireLeaseAsync(string id, TimeSpan throttleTime, string leaseId)
+protected internal override async Task<bool> TryAcquireLeaseAsync(string id, TimeSpan throttleTime, string leaseId)
 {
     // TODO: make this smarter, call only if the container does not exists
     await this.containerReference.CreateIfNotExistsAsync();
@@ -51,7 +51,7 @@ protected internal override async Task<bool> TryAdquireLeaseAsync(string id, Tim
 
     try
     {
-        // try to adquire lease
+        // try to acquire lease
         await blob.AcquireLeaseAsync(
             throttleTime,
             leaseId,
@@ -79,7 +79,7 @@ Locking with CosmosDB relies in having a document structure that identifies unti
 ```json
 {
     "id": "deviceID",
-    "leaseID": "<instance-id-that-adquired-the-lease>",
+    "leaseID": "<instance-id-that-acquired-the-lease>",
     "leasedUntil": "<time-when-lease-will-expire>"
 }
 ```
@@ -90,13 +90,13 @@ The code looks like this:
 
 ```c#
 /// <summary>
-/// Tries to adquire a lease
+/// Tries to acquire a lease
 /// </summary>
 /// <param name="id"></param>
 /// <param name="throttleTime"></param>
 /// <param name="leaseId"></param>
 /// <returns></returns>
-protected internal override async Task<bool> TryAdquireLeaseAsync(string id, TimeSpan throttleTime, string leaseId)
+protected internal override async Task<bool> TryAcquireLeaseAsync(string id, TimeSpan throttleTime, string leaseId)
 {
     // Document is already there, check if it has an expired lease
     var readResponse = await this.container.Items.ReadItemAsync<CosmosDBLease>(id, id);

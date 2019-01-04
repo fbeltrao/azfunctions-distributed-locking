@@ -40,28 +40,28 @@ namespace DeviceAlertFunctionApp
 
 
         /// <summary>
-        /// Tries to adquire a lease
+        /// Tries to acquire a lease
         /// </summary>
         /// <param name="id"></param>
         /// <param name="throttleTime"></param>
         /// <param name="leaseId"></param>
         /// <returns></returns>
-        protected internal override async Task<bool> TryAdquireLeaseAsync(string id, TimeSpan throttleTime, string leaseId)
+        protected internal override async Task<bool> TryAcquireLeaseAsync(string id, TimeSpan throttleTime, string leaseId)
         {
             var cacheKey = CreateCacheKey(id);
             // If we haven't find in cached we need to try concrete implementation
             if (!this.cache.TryGetValue(cacheKey, out _))
             {
-                var leaseAdquired = await this.concrete.TryAdquireLeaseAsync(id, throttleTime, leaseId);
-                if (leaseAdquired)
+                var leaseAcquired = await this.concrete.TryAcquireLeaseAsync(id, throttleTime, leaseId);
+                if (leaseAcquired)
                 {
-                    // lease adquired, save it in cache with the timeout
+                    // lease acquired, save it in cache with the timeout
                     this.cache.Set<object>(cacheKey, cachedObject, DateTimeOffset.UtcNow.Add(throttleTime));
                     return true;
                 }
                 else
                 {
-                    // lease not adquired, since we don't know long if we need to wait we add cached value with a pre-defined timeout
+                    // lease not acquired, since we don't know long if we need to wait we add cached value with a pre-defined timeout
                     // default is 3 seconds
                     this.cache.Set<object>(cacheKey, cachedObject, DateTimeOffset.UtcNow.Add(this.timeoutForFailedLeases));
                 }

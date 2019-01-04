@@ -23,7 +23,7 @@ namespace DeviceAlertFunctionApp
         public async Task RunAsync(string id, TimeSpan throttleTime, ExecutionContext executionContext, Func<Task> execution, Func<Task> funcIfThrottled = null)
         {
             var leaseId = executionContext.InvocationId.ToString();
-            if (await this.TryAdquireLeaseAsync(id, throttleTime, leaseId))
+            if (await this.TryAcquireLeaseAsync(id, throttleTime, leaseId))
             {
                 try
                 {
@@ -47,7 +47,7 @@ namespace DeviceAlertFunctionApp
         public async Task<T> RunAsync<T>(string id, TimeSpan throttleTime, ExecutionContext executionContext, Func<Task<T>> execution, Func<Task<T>> funcIfThrottled = null)
         {
             var leaseId = executionContext.InvocationId.ToString();
-            if (await this.TryAdquireLeaseAsync(id, throttleTime, leaseId))
+            if (await this.TryAcquireLeaseAsync(id, throttleTime, leaseId))
             {
                 try
                 {
@@ -74,7 +74,7 @@ namespace DeviceAlertFunctionApp
         // Cancels an obtained lease
         protected internal abstract Task ReleaseLeaseAsync(string id, string leaseId);
 
-        // Tries to adquire lease for the operation
-        protected internal abstract Task<bool> TryAdquireLeaseAsync(string id, TimeSpan throttleTime, string leaseId);     
+        // Tries to acquire lease for the operation
+        protected internal abstract Task<bool> TryAcquireLeaseAsync(string id, TimeSpan throttleTime, string leaseId);     
     }
 }

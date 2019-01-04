@@ -25,7 +25,7 @@ namespace DeviceAlertFunctionApp
             {
                 var blob = this.containerReference.GetAppendBlobReference(id);
 
-                // try to adquire lease
+                // try to acquire lease
                 await blob.ReleaseLeaseAsync(new AccessCondition { LeaseId = leaseId });
             }
             catch (StorageException ex) when (ex.RequestInformation?.HttpStatusCode == (int)HttpStatusCode.Conflict || ex.RequestInformation?.HttpStatusCode == (int)HttpStatusCode.PreconditionFailed)
@@ -35,13 +35,13 @@ namespace DeviceAlertFunctionApp
 
 
         /// <summary>
-        /// Tries to adquire a lease
+        /// Tries to acquire a lease
         /// </summary>
         /// <param name="id"></param>
         /// <param name="throttleTime"></param>
         /// <param name="leaseId"></param>
         /// <returns></returns>
-        protected internal override async Task<bool> TryAdquireLeaseAsync(string id, TimeSpan throttleTime, string leaseId)
+        protected internal override async Task<bool> TryAcquireLeaseAsync(string id, TimeSpan throttleTime, string leaseId)
         {
             // TODO: make this smarter, call only if the container does not exists
             await this.containerReference.CreateIfNotExistsAsync();
@@ -64,7 +64,7 @@ namespace DeviceAlertFunctionApp
 
             try
             {
-                // try to adquire lease
+                // try to acquire lease
                 await blob.AcquireLeaseAsync(
                     throttleTime,
                     leaseId,
