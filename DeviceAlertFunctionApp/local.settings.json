@@ -1,0 +1,9 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "CosmosDBConnectionString": "AccountEndpoint=https://your-cosmos-db.documents.azure.com:443/;AccountKey=xxxxxx;",
+    "AzureWebJobsStorage": "DefaultEndpointsProtocol=https;AccountName=xxxx;AccountKey=xxxx;EndpointSuffix=core.windows.net",
+    "FUNCTIONS_WORKER_RUNTIME": "dotnet",
+    "iothub_connectionstring": "Endpoint=sb://xxxxx.servicebus.windows.net/;SharedAccessKeyName=iothubowner;SharedAccessKey=xxx;EntityPath=xxxx"
+  }
+}
