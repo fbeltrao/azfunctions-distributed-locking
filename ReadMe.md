@@ -16,7 +16,7 @@ The challenge is to ensure that a single device will not trigger the alert more 
 
 ## Locking using Azure Storage
 
-Azure storage locking implementation relies in leasing blob files for a certain amount of time. Once a blob is leased, no one else can lease it until it the expiration time is reached. As long as the lease is valid no notification is sent. Leasing in Azure storage must stay between the range of [15 to 60 seconds](https://docs.microsoft.com/en-us/rest/api/storageservices/lease-blob).
+Azure storage locking implementation relies in leasing blob files for a certain amount of time. Once a blob is leased, no one else can lease it until it the expiration time is reached. Leasing in Azure storage must stay between the range of [15 to 60 seconds](https://docs.microsoft.com/en-us/rest/api/storageservices/lease-blob).
 
 The implementation is the following:
 
@@ -165,7 +165,7 @@ protected internal override async Task<bool> TryAcquireLeaseAsync(string id, Tim
 }
 ```
 
-The sample project contains an IoT Hub and Http Trigger implementation that uses `ThrottledGate` to limit the amount of notifications per device generated. Moreover, it has a InMemoryThrottleGate simple implementation that caches leases in memory with the goal of reducing calls to the backend implementation (Storage or CosmosDB). The optimization usefulness depends on the scenario and how many times the same device is triggering an alert (before adopting measure in your use case).
+The sample project contains an IoT Hub and Http Trigger implementation that uses `ThrottledGate` to limit the amount of notifications per device generated. Moreover, it has a InMemoryThrottleGate simple implementation that caches leases in memory with the goal of reducing calls to the backend implementation (Storage or CosmosDB). The optimisation usefulness depends on the scenario and how often a device triggers an alert (before adopting measure in your use case).
 
 Creating a storage based throttled gate:
 
@@ -214,4 +214,4 @@ public static async Task IoTHubDeviceTelemetryListener(
 
 ## Extending throttle gates with different backend services
 
-Adding new providers is simple and can be implemented according with backend service you are familiar with (SQL databases, Redis, etc).
+Adding new providers is simple and can be implemented according with backend service you are familiar with (SQL databases, Redis, etc). Take a look at the [ThrottledGate abstract class](https://github.com/fbeltrao/azfunctions-distributed-locking/blob/master/DeviceAlertFunctionApp/ThrottledGate.cs) to understand the implementation requirements.
