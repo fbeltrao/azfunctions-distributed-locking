@@ -98,48 +98,25 @@ The code looks like this:
 /// <returns></returns>
 protected internal override async Task<bool> TryAcquireLeaseAsync(string id, TimeSpan throttleTime, string leaseId)
 {
+    var partitionKey = new PartitionKey(id);
+
     // Document is already there, check if it has an expired lease
-    var readResponse = await this.container.Items.ReadItemAsync<CosmosDBLease>(id, id);
-    if (readResponse.StatusCode == HttpStatusCode.OK)
+    ItemResponse<CosmosDBLease> readResponse;
+    try
     {
-        var existingLease = readResponse.Resource;
-        if (existingLease.LeasedUntil != null && existingLease.LeasedUntil.Value >= DateTime.UtcNow)
-            return false;
-
-        var updatedLease = new CosmosDBLease()
-        {
-            ID = id,
-            LeaseID = leaseId,
-            LeasedUntil = DateTime.UtcNow.Add(throttleTime),
-        };
-
-        try
-        {
-            var updateLeaseResponse = await this.container.Items.ReplaceItemAsync(
-                id,
-                id,
-                updatedLease,
-                new CosmosItemRequestOptions()
-                {
-                    AccessCondition = new AccessCondition()
-                    {
-                        Type = AccessConditionType.IfMatch,
-                        Condition = readResponse.ETag,
-                    },
-                });
-
-            return updateLeaseResponse.StatusCode == HttpStatusCode.OK;
-        }
-        catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.Conflict)
-        {
-            // someone else leased before us
-        }
-
-        return false;
+        readResponse = await this.container.ReadItemAsync<CosmosDBLease>(id, partitionKey);
+    }
+    catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
+    {
+        // Does not exist: create it!
+        return await TryCreateLeaseAsync(id, leaseId, throttleTime);
     }
 
-    // Document did not exist. Try to be the first to created it, adquiring the lease
-    var newLease = new CosmosDBLease()
+    var existingLease = readResponse.Resource;
+    if (existingLease.LeasedUntil != null && existingLease.LeasedUntil.Value >= DateTime.UtcNow)
+        return false;
+
+    var updatedLease = new CosmosDBLease()
     {
         ID = id,
         LeaseID = leaseId,
@@ -148,20 +125,22 @@ protected internal override async Task<bool> TryAcquireLeaseAsync(string id, Tim
 
     try
     {
-        var createResponse = await this.container.Items.CreateItemAsync<CosmosDBLease>(
+        var updateLeaseResponse = await this.container.ReplaceItemAsync<CosmosDBLease>(
+            updatedLease,
             id,
-            newLease);
+            partitionKey,
+            new ItemRequestOptions()
+            {
+                IfMatchEtag = readResponse.ETag,
+            });
 
-        if (createResponse.StatusCode == HttpStatusCode.Created)
-            return true;
+        return updateLeaseResponse.StatusCode == HttpStatusCode.OK;
     }
     catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.Conflict)
     {
-        // document was created before, we did not get the lease
-        // do not throw exception
+        // someone else leased before us
+        return false;
     }
-
-    return false;
 }
 ```
 
